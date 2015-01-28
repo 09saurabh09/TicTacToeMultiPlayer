@@ -6,7 +6,7 @@
  */
 
 var redis = require("redis"),
-    client = redis.createClient(19348, "pub-redis-19348.ap-southeast-1-1.1.ec2.garantiadata.com");
+    client = redis.createClient(19348, "YourConnectionString");
     
     client.auth("Misys123$");
 
