@@ -1,0 +1,276 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Tic Tac Toe</title>
+		
+		<style>
+			p { padding: 3px; position: fixed; bottom: 0; width: 100%; }
+			#messages { list-style-type: none; margin: 0; padding: 0; }
+	        #messages li { padding: 5px 10px; }
+	        #messages li:nth-child(odd) { background: #eee; }
+		</style>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+        
+		<script type="text/javascript">
+		
+	
+    $( document ).ready(function() {
+		//Global Variables
+		
+		io.socket.on('connect', function() {
+          console.log('check 2', io.socket.socket.connected);
+        });
+		
+		var painted;
+		var content;
+		var winningCombinations;
+		var turn = 0;
+		var theCanvas;
+		var c;
+		var cxt;
+		var squaresFilled = 0;
+		var w;
+		var y;
+
+
+		
+		var person = prompt("Please enter your name");
+        io.socket.emit('newuser',{'name':person});
+        var address = document.location.href;
+        var randomString = Math.random().toString(36).substring(2,7);
+        console.log([address,randomString]);
+        
+        io.socket.on('connect', function() {
+          console.log('check 2', io.socket.socket.connected);
+        });
+        
+        // Handle UI
+        $(function() {
+
+            $('#send').on('click', function() {
+                console.log($('input').val());
+                io.socket.emit('chat', {
+                    message:$('input').val()
+                });
+                $('input').val('');
+                
+            });
+            
+            io.socket.on('chatm',function(msg) {
+                $('#messages').append($('<li>').text(msg.name+" :"+msg.message));
+                console.log(msg.message);
+            });
+        });
+		
+
+        var address = document.location.href;
+        var randomString = Math.random().toString(36).substring(2,7);
+        //console.log([address,randomString]);
+        
+        var addressNew = address+'/'+randomString;
+        console.log(addressNew);
+        var socket;
+        var data = randomString;
+		// the g in the regular expression says to search the whole string 
+		// rather than just find the first occurrence
+		var count = (address.match(/\//g) || []).length;
+
+        if (count === 3){
+        	//socket = io({ query: data });
+        	io.socket.post('/chat/connect',{data}, function(data) {
+            });
+            
+            io.socket.emit('register', {'invite':data});
+        } 
+        else {
+        	var addLength = address.length;
+		    var res = address.substring(addLength-5, addLength);
+		    data = res;
+		    io.socket.post('/chat/connect',{data}, function(data) {
+            });
+            
+            io.socket.emit('register', {'invite':data});
+        	//socket = io({ query: data });
+        }
+
+        io.socket.on('connect', function() {
+         console.log('check 2', io.socket.socket.connected);
+        });
+
+		//Instanciate Arrays
+
+			
+			painted = new Array();
+			content = new Array();
+			winningCombinations = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+			for(var l = 0; l <= 8; l++){
+			painted[l] = false;
+			content[l]='';
+			}
+		
+		
+		// Method for inviting
+		function invite() {
+			 if (count === 3){
+        	 alert("Send this link to your friend to play: \n\n"+addressNew);
+        	 io.socket.emit('invite', {
+                    uid:randomString
+                });
+       		 }
+			
+		}
+		
+
+		 io.socket.on('newturn',function(msg) {
+                //$('#messages').append($('<li>').text(person+" :"+msg.message));
+                console.log(msg.message);
+                canvasClicked(msg.message,'nooo');
+                console.log("hi");
+            });
+		
+		function newgame(){
+			
+		for(var i = 0; i<9; i++) {
+		squaresFilled =0;	
+		c = document.getElementById(i+1);
+			cxt = c.getContext("2d");
+		cxt.clearRect ( 0 , 0 , 50, 50 );
+		painted[i] = false;
+		content[i]='';
+		
+		}
+
+		}
+		//Game methods
+		function canvasClicked(canvasNumber,bool){
+			theCanvas = canvasNumber;
+			c = document.getElementById(theCanvas);
+			cxt = c.getContext("2d");
+            
+             if(bool != 'nooo') {
+                console.log(canvasNumber);
+                io.socket.emit('turn', {message:canvasNumber});
+             }
+            
+           
+            
+			if(painted[canvasNumber-1] ==false){
+				if(turn%2==0){
+					cxt.beginPath();
+					cxt.moveTo(10,10);
+					cxt.lineTo(40,40);
+					cxt.moveTo(40,10);
+					cxt.lineTo(10,40);
+					cxt.stroke();
+					cxt.closePath();
+					content[canvasNumber-1] = 'X';
+				}
+
+				else{
+					cxt.beginPath();
+					cxt.arc(25,25,20,0,Math.PI*2,true);
+					cxt.stroke();
+					cxt.closePath();
+					content[canvasNumber-1] = 'O';
+				}
+
+				turn++;
+				painted[canvasNumber-1] = true;
+				squaresFilled++;
+				checkForWinners(content[canvasNumber-1]);
+
+				if(squaresFilled==9){
+					alert("THE GAME IS OVER!");
+					location.reload(true);
+				}
+			
+			}
+			else{
+				alert("THAT SPACE IS ALREADY OCCUPIED WITH YOUR HEART!");
+			}
+
+		}
+
+		function checkForWinners(symbol){
+			
+			for(var a = 0; a < winningCombinations.length; a++){
+			if(content[winningCombinations[a][0]]==symbol&&content[winningCombinations[a][1]]==	symbol&&content[winningCombinations[a][2]]==symbol){
+				alert(symbol+ " WON!");
+				playAgain();
+			}
+			}
+
+		}
+
+		function playAgain(){
+			y=confirm("PLAY AGAIN?");
+			if(y==true){
+				//location.reload(true);
+				newgame();
+			}
+			else{
+				alert("SO LONG,SUCKER!");
+		}
+
+		}
+		
+		$('canvas[type=box]').click(function() {
+       var number = $(this).attr('id');
+       canvasClicked(number);
+  	   });
+  	   
+  	   	$('#invite').click(function() {
+      invite();
+  	   });
+  	   
+    });
+
+		</script>
+	</head>
+	<body>
+		 
+        
+        <div class="container">     
+    <div class="span12">      
+   		<div class="row">
+   			
+  
+				<div class="col-xs-10 col-sm-3" id ="box">
+				
+  
+
+				    <h3> TIC - TAC - TOE!</h3>
+					<canvas id = "1" type='box' width="50" height="50" style="border:1px solid black"></canvas>
+					<canvas id = "2" type='box' width="50" height="50" style="border:1px solid black" ></canvas>
+					<canvas id = "3" type='box' width="50" height="50" style="border:1px solid black" ></canvas><br/>
+					<canvas id = "4" type='box' width="50" height="50" style="border:1px solid black" ></canvas>
+					<canvas id = "5" type='box' width="50" height="50" style="border:1px solid black" ></canvas>
+					<canvas id = "6" type='box' width="50" height="50" style="border:1px solid black" ></canvas><br/>
+					<canvas id = "7" type='box' width="50" height="50" style="border:1px solid black" ></canvas>
+					<canvas id = "8" type='box' width="50" height="50" style="border:1px solid black" ></canvas>
+					<canvas id = "9" type='box' width="50" height="50" style="border:1px solid black" ></canvas>
+			
+				<br/>
+			 	<button id="invite" type="button">Invite your friend</button> 
+			 	</div>
+			 	
+			 	<div class="col-xs-10 col-sm-3" style = "display:block;height:400px;max-height:400px;overflow:scroll;">
+			 		<div>
+				 		<h1>Simple Chat</h1>
+					    <ul id="messages"></ul>
+					    <p>
+					        <input type="text"/>
+					        <button id = "send">Send Chat Message</button>
+					    </p>
+				    </div>
+			 	</div>
+		 	</div>
+		  </div> 
+		</div>
+	</body>
+</html>
+
+

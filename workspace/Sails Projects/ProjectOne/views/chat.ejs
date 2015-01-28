@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Chat Example</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    
+     <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      p { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+    <script>
+    $( document ).ready(function() {
+        var person = prompt("Please enter your name");
+        io.socket.emit('newuser',{'name':person});
+        var address = document.location.href;
+        var randomString = Math.random().toString(36).substring(2,7);
+        console.log([address,randomString]);
+        
+        io.socket.on('connect', function() {
+          console.log('check 2', io.socket.socket.connected);
+        });
+        
+        // Handle UI
+        $(function() {
+            $('button').on('click', function() {
+                console.log($('input').val());
+                io.socket.emit('chat', {
+                    message:$('input').val()
+                });
+            });
+            
+            io.socket.on('chatm',function(msg) {
+                $('#messages').append($('<li>').text(msg.name+" :"+msg.message));
+                console.log(msg.message);
+            });
+        });
+    });
+    </script>
+</head>
+<body>
+    <h1>Simple Chat</h1>
+    <ul id="messages"></ul>
+    <p>
+        <input type="text"/>
+        <button>Send Chat Message</button>
+    </p>
+</body>
+</html>
