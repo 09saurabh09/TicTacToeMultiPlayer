@@ -58,7 +58,7 @@ module.exports.connections = {
   ***************************************************************************/
   someMongodbServer: {
     module: 'sails-mongo',
-    url:"mongodb://admin:admin@kahana.mongohq.com:10040/node_v1"
+    url:"YourConnectionString"
     // adapter: 'sails-mongo',
     // host: 'localhost',
     // port: 27017,
