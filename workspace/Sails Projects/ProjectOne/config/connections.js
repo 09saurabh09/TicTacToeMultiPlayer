@@ -86,7 +86,7 @@ module.exports.connections = {
   
   redis: {
     module: 'node-redis',
-    url:"pub-redis-19348.ap-southeast-1-1.1.ec2.garantiadata.com:19348"
+    url:"YourConnectionString"
     // adapter: 'node-redis',
     // host: 'YOUR_POSTGRES_SERVER_HOSTNAME_OR_IP_ADDRESS',
     // user: 'YOUR_POSTGRES_USER',
